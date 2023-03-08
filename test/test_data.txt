@@ -1,0 +1,5 @@
+test line for one occurence in single line
+test for multiple occurences in single line test test
+for no ocuurences in line
+Test for case-insensitive 
+Testing for excat match
