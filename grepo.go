@@ -21,6 +21,9 @@ type ParsedInput struct {
 	UserGivenSearchList []string
 	IsInputProvided     bool
 	SearchDirectory     string
+	OnlyCount           bool
+	ShowLinesAfterMatch bool
+	ShowLineBeforeMatch  bool
 }
 
 type SearchResult struct {
@@ -44,6 +47,9 @@ func GetParsedInput() ParsedInput {
 	isUserInputProvided := flag.Bool("input", false, "lets user enter list of words")
 	outputFilename := flag.String("o", "", "stores output in given file")
 	serahDirectory := flag.String("dir", "", "search word in all files of provided directory")
+	onlyCount := flag.Bool("c", false, "output only count of matches")
+	showLinesAfterMatch := flag.Bool("a", false, "display lines after match")
+	showLinesBeforeMatch := flag.Bool("b", false, "display lines before match")
 	flag.Parse()
 
 	if *searchword == "" {
@@ -82,6 +88,9 @@ func GetParsedInput() ParsedInput {
 		IsInputProvided:     *isUserInputProvided,
 		OutputFilename:      *outputFilename,
 		SearchDirectory:     *serahDirectory,
+		OnlyCount:           *onlyCount,
+		ShowLinesAfterMatch: *showLinesAfterMatch,
+		ShowLineBeforeMatch:  *showLinesBeforeMatch,
 	}
 }
 
@@ -112,7 +121,6 @@ func GrepSearch(parsedInput ParsedInput) {
 		}
 
 	}
-
 	err = handleOutput(results, parsedInput)
 
 	if err != nil {
@@ -125,7 +133,7 @@ SearchDirectory function is responsible to find all txt files in a given directo
 It calls SearchFile function to get search results, combine them and returns it
 */
 func SearchDirectory(parsedInput ParsedInput) ([]SearchResult, error) {
-	combinedResults :=[]SearchResult{}
+	combinedResults := []SearchResult{}
 	err := filepath.Walk(parsedInput.SearchDirectory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -235,10 +243,10 @@ func SearchText(text string, parsedInput ParsedInput, lineNumber int) []SearchRe
 }
 
 /*
-constructRedableMessages function is responsible to return a list of formatted messages based on SearchResult array.
+constructOutputFromResults function is responsible to return a list of formatted messages based on SearchResult array.
 It constructs redable messages based usecase (file search or user input search)
 */
-func constructRedableMessages(results []SearchResult) []string {
+func constructOutputFromResults(results []SearchResult) []string {
 	var redableMessages = []string{}
 	var message string
 	for _, result := range results {
@@ -260,8 +268,22 @@ handleOutput function is responsible to output search result.
 Based on flags output is displayed on console or stored in output file.
 */
 func handleOutput(results []SearchResult, parsedInput ParsedInput) error {
+	var formattedMessages []string
 
-	formattedMessages := constructRedableMessages(results)
+	if parsedInput.OnlyCount {
+		formattedMessages = append(formattedMessages, fmt.Sprintf("Number of matches : %v", len(results)))
+	} else if (parsedInput.ShowLineBeforeMatch || parsedInput.ShowLinesAfterMatch) && len(results) > 0 {
+		var err error
+		formattedMessages, err = getLinesFromFileAroundLineNumber(results[0].FileName, results[0].LineNumber, parsedInput.ShowLinesAfterMatch, parsedInput.ShowLineBeforeMatch)
+
+		if err != nil {
+			return err
+		}
+
+	} else {
+
+		formattedMessages = constructOutputFromResults(results)
+	}
 
 	if parsedInput.OutputFilename != "" {
 		err := WriteOutputToFile(parsedInput.OutputFilename, formattedMessages)
@@ -310,4 +332,33 @@ func printMessages(messages []string) {
 	for _, message := range messages {
 		fmt.Println(message)
 	}
+}
+
+func getLinesFromFileAroundLineNumber(filename string, linenumber int, after bool, before bool) ([]string, error) {
+	results := []string{}
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	currntLineNumber := 1
+
+	for scanner.Scan() {
+		lineText := scanner.Text()
+
+		if after && currntLineNumber > linenumber {
+			results = append(results, lineText)
+		}
+		if before && currntLineNumber < linenumber {
+			results = append(results, lineText)
+		}
+		currntLineNumber++
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
