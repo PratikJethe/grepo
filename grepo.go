@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -14,11 +15,12 @@ import (
 type ParsedInput struct {
 	Filename            string
 	OutputFilename      string
-	SerachQuery         string
+	SearchQuery         string
 	IsCaseInsensitive   bool
 	IsExactMatch        bool
 	UserGivenSearchList []string
 	IsInputProvided     bool
+	SearchDirectory     string
 }
 
 type SearchResult struct {
@@ -26,8 +28,14 @@ type SearchResult struct {
 	LineText      string
 	StartPosition int
 	EndPosition   int
+	FileName      string
 }
 
+/*
+GetParsedInput function is responsible to register flags.
+It returns ParsedInput structure which contains all the flags.
+It also performs basic validation on given flags.
+*/
 func GetParsedInput() ParsedInput {
 	filename := flag.String("f", "", "filename of file to be searched")
 	searchword := flag.String("s", "", "search word to be searched")
@@ -35,16 +43,17 @@ func GetParsedInput() ParsedInput {
 	isExactMatch := flag.Bool("e", false, "makes an exact search")
 	isUserInputProvided := flag.Bool("input", false, "lets user enter list of words")
 	outputFilename := flag.String("o", "", "stores output in given file")
+	serahDirectory := flag.String("dir", "", "search word in all files of provided directory")
 	flag.Parse()
 
 	if *searchword == "" {
 		flag.Usage()
 		log.Fatal("-s (search word) is required")
 	}
-	if *filename == "" && !*isUserInputProvided {
+	if *filename == "" && !*isUserInputProvided && *serahDirectory == "" {
 		flag.Usage()
 
-		log.Fatal("-f (filename) or -input (standard input) is required")
+		log.Fatal("-f (filename) , -input (standard input) or -dir (directory) is required ")
 	}
 	if *filename != "" && *isUserInputProvided {
 		flag.Usage()
@@ -66,26 +75,40 @@ func GetParsedInput() ParsedInput {
 
 	return ParsedInput{
 		Filename:            *filename,
-		SerachQuery:         *searchword,
+		SearchQuery:         *searchword,
 		IsCaseInsensitive:   *isCaseInsensitive,
 		IsExactMatch:        *isExactMatch,
 		UserGivenSearchList: userProvidedSearchlist,
 		IsInputProvided:     *isUserInputProvided,
 		OutputFilename:      *outputFilename,
+		SearchDirectory:     *serahDirectory,
 	}
 }
 
+/*
+GrepSearch function is responsible to call appropriate search function based on user flags.
+It taks ParsedInput as input param.
+Based on the flags it calls SearchUserInput, SearchDirectory or SearchFile.
+results from above functions are passed to handleOutput function
+*/
 func GrepSearch(parsedInput ParsedInput) {
 
 	var err error
 	var results []SearchResult
 	if parsedInput.IsInputProvided {
-		results = searchUserInput(parsedInput)
+		results = SearchUserInput(parsedInput)
 
 	} else {
-		results, err = searchFile(parsedInput)
-		if err != nil {
-			log.Fatal(err)
+		if parsedInput.SearchDirectory != "" {
+			results, err = SearchDirectory(parsedInput)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			results, err = SearchFile(parsedInput)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
 	}
@@ -97,7 +120,45 @@ func GrepSearch(parsedInput ParsedInput) {
 	}
 }
 
-func searchFile(parsedInput ParsedInput) ([]SearchResult, error) {
+/*
+SearchDirectory function is responsible to find all txt files in a given directory.
+It calls SearchFile function to get search results, combine them and returns it
+*/
+func SearchDirectory(parsedInput ParsedInput) ([]SearchResult, error) {
+	combinedResults :=[]SearchResult{}
+	err := filepath.Walk(parsedInput.SearchDirectory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && filepath.Ext(path) == ".txt" {
+			newParsedInput := parsedInput
+			newParsedInput.Filename = path
+			results, err := SearchFile(newParsedInput)
+
+			combinedResults = append(combinedResults, results...)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return combinedResults, nil
+
+}
+
+/*
+SearchFile function is responsible to return all the matches in a given file.
+It open the given file, loops through each line and passes it to SearchText function
+*/
+func SearchFile(parsedInput ParsedInput) ([]SearchResult, error) {
 	results := []SearchResult{}
 	file, err := os.Open(parsedInput.Filename)
 	if err != nil {
@@ -123,7 +184,11 @@ func searchFile(parsedInput ParsedInput) ([]SearchResult, error) {
 	return results, nil
 }
 
-func searchUserInput(parsedInput ParsedInput) []SearchResult {
+/*
+SearchUserInput function is responsible to return all the matches found in user provided input.
+It loops through user provided list of words and passes them to SearchText function
+*/
+func SearchUserInput(parsedInput ParsedInput) []SearchResult {
 	results := []SearchResult{}
 
 	for i, word := range parsedInput.UserGivenSearchList {
@@ -136,10 +201,14 @@ func searchUserInput(parsedInput ParsedInput) []SearchResult {
 
 }
 
+/*
+SearchText function is responsible to return all the matches found in provided text.
+It constructs regex based on user flags and checks the match against given text
+*/
 func SearchText(text string, parsedInput ParsedInput, lineNumber int) []SearchResult {
 
 	results := []SearchResult{}
-	regexPattern := regexp.QuoteMeta(parsedInput.SerachQuery)
+	regexPattern := regexp.QuoteMeta(parsedInput.SearchQuery)
 	if parsedInput.IsCaseInsensitive {
 		regexPattern = "(?i)" + regexPattern
 	}
@@ -154,7 +223,9 @@ func SearchText(text string, parsedInput ParsedInput, lineNumber int) []SearchRe
 		for _, match := range matches {
 			result := SearchResult{
 				LineNumber: lineNumber,
-				LineText:   text, StartPosition: match[0], EndPosition: match[1]}
+				LineText:   text, StartPosition: match[0], EndPosition: match[1],
+				FileName: parsedInput.Filename,
+			}
 			results = append(results, result)
 		}
 
@@ -163,23 +234,37 @@ func SearchText(text string, parsedInput ParsedInput, lineNumber int) []SearchRe
 	return results
 }
 
+/*
+constructRedableMessages function is responsible to return a list of formatted messages based on SearchResult array.
+It constructs redable messages based usecase (file search or user input search)
+*/
 func constructRedableMessages(results []SearchResult) []string {
 	var redableMessages = []string{}
-
+	var message string
 	for _, result := range results {
-		message := fmt.Sprintf("Match on  line  %v:%v \"%v\"", result.LineNumber, result.StartPosition, result.LineText)
+
+		if result.FileName != "" {
+			message = fmt.Sprintf("Match in file: %v  line  %v:%v \"%v\"", result.FileName, result.LineNumber, result.StartPosition, result.LineText)
+		} else {
+			message = fmt.Sprintf("Match found: %v", result.LineText)
+
+		}
 		redableMessages = append(redableMessages, message)
 
 	}
 	return redableMessages
 }
 
+/*
+handleOutput function is responsible to output search result.
+Based on flags output is displayed on console or stored in output file.
+*/
 func handleOutput(results []SearchResult, parsedInput ParsedInput) error {
 
 	formattedMessages := constructRedableMessages(results)
 
 	if parsedInput.OutputFilename != "" {
-		err := writeOutputToFile(parsedInput.OutputFilename, formattedMessages)
+		err := WriteOutputToFile(parsedInput.OutputFilename, formattedMessages)
 
 		if err != nil {
 			return err
@@ -193,7 +278,10 @@ func handleOutput(results []SearchResult, parsedInput ParsedInput) error {
 	return nil
 }
 
-func writeOutputToFile(filename string, messages []string) error {
+/*
+WriteOutputToFile function is responsible to store output in output file when -o flag is provided.
+*/
+func WriteOutputToFile(filename string, messages []string) error {
 	_, err := os.Stat(filename)
 
 	if err == nil {
@@ -215,6 +303,9 @@ func writeOutputToFile(filename string, messages []string) error {
 	return nil
 }
 
+/*
+printMessages function is responsible to print output on console.
+*/
 func printMessages(messages []string) {
 	for _, message := range messages {
 		fmt.Println(message)
