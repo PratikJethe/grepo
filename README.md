@@ -34,8 +34,8 @@ grepo supports various flags. multiple flags can be combined to generate desired
 | -o | accepts output file path to store output | string
 | -dir | accepts path to directory where search is to be performed | string
 | -c | show only count of matches | bool
-| -a | display lines after match | string
-| -b | display lines before match | string
+| -a | display lines after match | bool
+| -b | display lines before match | bool
 
 
 ## Examples 
