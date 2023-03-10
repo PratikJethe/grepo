@@ -15,10 +15,7 @@ grepo is an implementation of the Unix command grep in Go. grep is a tool used f
 - execute binary with appropriate flags [./grepo.exe -f filename.txt -s search_word]
 
 
-```sh
-npm install --production
-NODE_ENV=production node app
-```
+
 
 ## Flags
 
@@ -132,15 +129,8 @@ line number 1 above match
 line number 2 above match
 line number 3 above match
 ```
-### 11. Show lines before match
- 
-```sh
-$ ./grepo.exe -s test  -f test/before_after.txt   -b
-line number 1 before match 
-line number 2 before match
-line number 3 before match
-```
-### 12. Show lines after match
+
+### 11. Show lines after match
  
 ```sh
 $ ./grepo.exe -s test  -f test/before_after.txt   -a
@@ -148,7 +138,7 @@ line number 1 after match
 line number 2 after match
 line number 3 after match
 ```
-### 13. Show lines after and before match
+### 12. Show lines after and before match
  
 ```sh
 $ ./grepo.exe -s test  -f test/before_after.txt   -a -b
