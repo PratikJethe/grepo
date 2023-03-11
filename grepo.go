@@ -40,14 +40,14 @@ It returns ParsedInput structure which contains all the flags.
 It also performs basic validation on given flags.
 */
 func GetParsedInput() ParsedInput {
-	filename := flag.String("f", "", "filename of file to be searched")
-	searchword := flag.String("s", "", "search word to be searched")
-	isCaseInsensitive := flag.Bool("i", false, "makes an case-insensitive search")
-	isExactMatch := flag.Bool("e", false, "makes an exact search")
-	isUserInputProvided := flag.Bool("input", false, "lets user enter list of words")
-	outputFilename := flag.String("o", "", "stores output in given file")
-	serahDirectory := flag.String("dir", "", "search word in all files of provided directory")
-	onlyCount := flag.Bool("c", false, "output only count of matches")
+	filename := flag.String("f", "", "accepts file path where search is to be done")
+	searchword := flag.String("s", "", "saccepts search query")
+	isCaseInsensitive := flag.Bool("i", false, "performs case insensitive search")
+	isExactMatch := flag.Bool("e", false, " performs exact matching search")
+	isUserInputProvided := flag.Bool("input", false, "accepts word from user")
+	outputFilename := flag.String("o", "", "accepts output file path to store output")
+	serahDirectory := flag.String("dir", "", "accepts path to directory where search is to be performed")
+	onlyCount := flag.Bool("c", false, "show only count of matches")
 	showLinesAfterMatch := flag.Bool("a", false, "display lines after match")
 	showLinesBeforeMatch := flag.Bool("b", false, "display lines before match")
 	flag.Parse()
@@ -244,10 +244,10 @@ func SearchText(text string, parsedInput ParsedInput, lineNumber int) []SearchRe
 
 /*
 constructOutputFromResults function is responsible to return a list of formatted messages based on SearchResult array.
-It constructs redable messages based usecase (file search or user input search)
+It constructs readable messages based usecase (file search or user input search)
 */
 func constructOutputFromResults(results []SearchResult) []string {
-	var redableMessages = []string{}
+	var readableMessages = []string{}
 	var message string
 	for _, result := range results {
 
@@ -257,10 +257,10 @@ func constructOutputFromResults(results []SearchResult) []string {
 			message = fmt.Sprintf("Match found: %v", result.LineText)
 
 		}
-		redableMessages = append(redableMessages, message)
+		readableMessages = append(readableMessages, message)
 
 	}
-	return redableMessages
+	return readableMessages
 }
 
 /*
@@ -334,6 +334,9 @@ func printMessages(messages []string) {
 	}
 }
 
+/*
+printMessages function is responsible to get line after or before a particular line number.
+*/
 func getLinesFromFileAroundLineNumber(filename string, linenumber int, after bool, before bool) ([]string, error) {
 	results := []string{}
 	file, err := os.Open(filename)

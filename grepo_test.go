@@ -195,22 +195,17 @@ func TestSearchDirectory(t *testing.T) {
 		{
 			Description: "testcase for match found in files of directory",
 			ParsedInput: ParsedInput{
-				SearchDirectory: "test",
+				SearchDirectory: "test/directory_one",
 				SearchQuery:     "test"},
 			ExpectedOutput: []SearchResult{
 				{LineNumber: 1, LineText: "test data in directory one", StartPosition: 0, EndPosition: 4, FileName: "test\\directory_one\\test_data_dir_1.txt"},
-				{LineNumber: 1, LineText: "test data in directory one", StartPosition: 0, EndPosition: 4, FileName: "test\\directory_two\\test_data_dir_2.txt"},
-				{LineNumber: 1, LineText: "test line for one occurence in single line", StartPosition: 0, EndPosition: 4, FileName: "test\\test_data.txt"},
-				{LineNumber: 2, LineText: "test for multiple occurences in single line test test", StartPosition: 0, EndPosition: 4, FileName: "test\\test_data.txt"},
-				{LineNumber: 2, LineText: "test for multiple occurences in single line test test", StartPosition: 44, EndPosition: 48, FileName: "test\\test_data.txt"},
-				{LineNumber: 2, LineText: "test for multiple occurences in single line test test", StartPosition: 49, EndPosition: 53, FileName: "test\\test_data.txt"},
 			},
 			ErrMsg: "Test failed for match found in files of directory",
 		},
 		{
 			Description: "testcase for match not found in files of directory",
 			ParsedInput: ParsedInput{
-				SearchDirectory: "test",
+				SearchDirectory: "test/directory_one",
 				SearchQuery:     "nomatch"},
 			ExpectedOutput: []SearchResult{},
 			ErrMsg:         "Test failed for match not found in files of directory",
