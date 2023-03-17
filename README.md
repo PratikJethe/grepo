@@ -80,8 +80,7 @@ Match found: lorem
 ### 6. Accept input from user with -i and -e flag
  
 ```sh
-$ ./grepo.exe -input -s test -i -e
-lorem testing Testing test Test
+$ ./grepo.exe  -s test -i -e lorem testing Testing test Test
 Match found: test
 Match found: Test
 ```
@@ -115,8 +114,8 @@ Match in file: test\directory_two\test_data_dir_2.txt  line  1:0 "test data in d
 ### 9. Show only count of matches
  
 ```sh
-$ ./grepo.exe -dir test -s  test -c
-Number of matches : 6
+$ ./grepo.exe -f test -s  test -c
+Number of matches : 8
 ```
 
 ### 10. Show lines before match
