@@ -247,38 +247,6 @@ func constructOutputFromResults(results []searchResult) []string {
 handleOutput function is responsible to output search result.
 Based on flags output is displayed on console or stored in output file.
 */
-// func handleOutput(results []searchResult, parsedInput cmd.ParsedInput) error {
-// 	var formattedMessages []string
-
-// 	if parsedInput.OnlyCount {
-// 		formattedMessages = append(formattedMessages, fmt.Sprintf("Number of matches : %v", len(results)))
-// 	} else if (parsedInput.ShowLineBeforeMatch || parsedInput.ShowLinesAfterMatch) && len(results) > 0 {
-// 		var err error
-// 		formattedMessages, err = getLinesFromFileAroundLineNumber(results[0].fileName, results[0].lineNumber, parsedInput.ShowLinesAfterMatch, parsedInput.ShowLineBeforeMatch)
-
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 	} else {
-
-// 		formattedMessages = constructOutputFromResults(results)
-// 	}
-
-// 	if parsedInput.OutputFilename != "" {
-// 		err := writeOutputToFile(parsedInput.OutputFilename, formattedMessages,)
-
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		fmt.Println("output stored into " + parsedInput.OutputFilename)
-// 	} else {
-// 		printMessages(formattedMessages)
-// 	}
-
-// 	return nil
-// }
 func handleOutputWithChannel(outputChannel <-chan output, wg *sync.WaitGroup) {
 	for {
 		output := <-outputChannel
@@ -334,13 +302,6 @@ func writeOutputToFile(filename string, messages []string, checkIfFileExist bool
 		}
 	}
 	file, err = os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-
-	// if err != nil {
-
-	// 	file, err = os.Create(filename)
-	// } else {
-	// 	file, err = os.OpenFile(filename)
-	// }
 	if err != nil {
 		return err
 	}
