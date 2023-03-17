@@ -1,8 +1,12 @@
 package main
 
+import (
+	"github.com/pratikjethe/grepo/cmd"
+	"github.com/pratikjethe/grepo/grepo"
+)
 
 func main() {
-	parsedInput := GetParsedInput()
-	GrepSearch(parsedInput)
+	parsedInput := cmd.GetParsedInput()
+	grepo.GrepSearch(parsedInput)
 
 }

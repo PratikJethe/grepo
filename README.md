@@ -23,13 +23,11 @@ grepo supports various flags. multiple flags can be combined to generate desired
 
 | flag | desrcription | datatype
 | ------ | ------ | ---- |
-| -f | accepts file path where search is to be done | string
+| -f | accepts file/dir path where search is to be done | string
 | -s | accepts search query| string
 | -i | performs case insensitive search| bool
 | -e | performs exact matching search | bool
-| -input | accepts word from user | bool
 | -o | accepts output file path to store output | string
-| -dir | accepts path to directory where search is to be performed | string
 | -c | show only count of matches | bool
 | -a | display lines after match | bool
 | -b | display lines before match | bool
@@ -43,7 +41,7 @@ grepo supports various flags. multiple flags can be combined to generate desired
  
 ```sh
 $ ./grepo.exe -f test/test_data.txt -s test
-Match in file: test/test_data.txt  line  1:0 "test line for one occurence in single line"
+Match in file: test/test_data.txt  line  1:0 "test line for one occurrencein single line"
 Match in file: test/test_data.txt  line  2:0 "test for multiple occurences in single line test test"
 Match in file: test/test_data.txt  line  2:44 "test for multiple occurences in single line test test"
 Match in file: test/test_data.txt  line  2:49 "test for multiple occurences in single line test test"
@@ -53,7 +51,7 @@ Match in file: test/test_data.txt  line  2:49 "test for multiple occurences in s
  
 ```sh
 $ ./grepo.exe -f test/test_data.txt -s test -i
-Match in file: test/test_data.txt  line  1:0 "test line for one occurence in single line"
+Match in file: test/test_data.txt  line  1:0 "test line for one occurrencein single line"
 Match in file: test/test_data.txt  line  2:0 "test for multiple occurences in single line test test"
 Match in file: test/test_data.txt  line  2:44 "test for multiple occurences in single line test test"
 Match in file: test/test_data.txt  line  2:49 "test for multiple occurences in single line test test"
@@ -75,10 +73,8 @@ Match in file: test/test_data.txt  line  5:0 "Testing for excat match"
 ### 5. Accept input from user
  
 ```sh
-$ ./grepo.exe -input -s test
-lorem testing Testing test
-Match found: testing
-Match found: test
+$ ./grepo.exe -s lorem test testing tested lorem ipsum
+Match found: lorem
 ```
 
 ### 6. Accept input from user with -i and -e flag
@@ -96,7 +92,7 @@ Match found: Test
 $ ./grepo.exe -f test/test_data.txt -s test -o output.txt
 output stored into output.txt
 $ cat output.txt 
-Match in file: test/test_data.txt  line  1:0 "test line for one occurence in single line"
+Match in file: test/test_data.txt  line  1:0 "test line for one occurrencein single line"
 Match in file: test/test_data.txt  line  2:0 "test for multiple occurences in single line test test"
 Match in file: test/test_data.txt  line  2:44 "test for multiple occurences in single line test test"
 Match in file: test/test_data.txt  line  2:49 "test for multiple occurences in single line test test"
@@ -105,13 +101,15 @@ Match in file: test/test_data.txt  line  2:49 "test for multiple occurences in s
 ### 8. Search in all text files of a given directory
  
 ```sh
-$ ./grepo.exe -dir test -s  test
+ ./grepo.exe -s test -f test
+Match in file: test\before_after.txt  line  4:0 "test line here"
 Match in file: test\directory_one\test_data_dir_1.txt  line  1:0 "test data in directory one"
-Match in file: test\directory_two\test_data_dir_2.txt  line  1:0 "test data in directory one"        
-Match in file: test\test_data.txt  line  1:0 "test line for one occurence in single line"
-Match in file: test\test_data.txt  line  2:0 "test for multiple occurences in single line test test" 
+Match in file: test\test_json.json  line  2:5 "    "test":"can serach in files other than txt""
+Match in file: test\test_data.txt  line  1:0 "test line for one occurrencein single line"
+Match in file: test\test_data.txt  line  2:0 "test for multiple occurences in single line test test"
 Match in file: test\test_data.txt  line  2:44 "test for multiple occurences in single line test test"
 Match in file: test\test_data.txt  line  2:49 "test for multiple occurences in single line test test"
+Match in file: test\directory_two\test_data_dir_2.txt  line  1:0 "test data in directory one
 ```
 
 ### 9. Show only count of matches

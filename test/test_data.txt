@@ -1,4 +1,4 @@
-test line for one occurence in single line
+test line for one occurrence in single line
 test for multiple occurences in single line test test
 for no ocuurences in line
 Test for case-insensitive 
