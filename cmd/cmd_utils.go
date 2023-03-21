@@ -1,8 +1,12 @@
 package cmd
 
 import (
+	"bufio"
 	"flag"
+	"fmt"
 	"log"
+	"os"
+	"strings"
 )
 
 type ParsedInput struct {
@@ -32,21 +36,22 @@ func GetParsedInput() ParsedInput {
 	showLinesAfterMatch := flag.Bool("a", false, "display lines after match")
 	showLinesBeforeMatch := flag.Bool("b", false, "display lines before match")
 	flag.Parse()
+	userProvidedSearchlist := []string{}
+	if len(*filename) == 0 {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Println("Enter input:")
+		searchString, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	userProvidedSearchlist := flag.Args()
+		userProvidedSearchlist = strings.Fields(searchString)
+
+	}
 
 	if *searchword == "" {
 		flag.Usage()
 		log.Fatal("-s (search word) is required")
-	}
-	if *filename == "" &&  len(userProvidedSearchlist)  == 0 {
-		flag.Usage()
-
-		log.Fatal("-f (filename) or user input is required ")
-	}
-	if *filename != "" && len(userProvidedSearchlist) >0{
-		flag.Usage()
-		log.Fatal("-f (filename) and user input cannot be provided at same time")
 	}
 
 
